@@ -1571,7 +1571,6 @@ def area_filament_w4c3_square(l, phi, th, delta, flag=False):
 # ------------------------------------------------------------
 
 def cond_filament_w3c2_square(l, phi, th, delta):
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1633,7 +1632,6 @@ def cond_filament_w2c0_opposite_square(l, phi, th, delta):
         cond1: h > 0
         cond2: 2r(1 - cos(alpha/2)) + h < 1 + 2 delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1694,7 +1692,6 @@ def cond_filament_w2c1_square(l, phi, th, delta):
         cond1: L_2 <= 1 - 2 delta
         cond2: r (1 - cos(theta)) < 1 - 2 delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
