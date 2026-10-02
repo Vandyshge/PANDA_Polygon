@@ -1,4 +1,4 @@
-import { computeProfile, listMorphologies } from "./model-runtime.js";
+import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261003";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, length: 1, ly: 1, phi: 0.25 };

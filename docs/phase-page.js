@@ -1,4 +1,4 @@
-import { computePhase, listMorphologies } from "./model-runtime.js";
+import { computePhase, listMorphologies } from "./model-runtime.js?v=20261003";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, lMax: 5, resolution: 180 };
