@@ -121,7 +121,7 @@ function draw() {
 function reset() {
   els.theta.value = DEFAULTS.theta; els.delta.value = DEFAULTS.delta; els.length.value = DEFAULTS.length;
   els.ly.value = DEFAULTS.ly; els.phi.value = DEFAULTS.phi;
-  els.morphology.value = [...els.morphology.options].some((item) => item.value === "droplet_w1c0") ? "droplet_w1c0" : els.morphology.options[0].value;
+  els.morphology.value = els.morphology.options[0].value;
   calculate();
 }
 
@@ -135,7 +135,7 @@ async function init() {
   try {
     const names = await listMorphologies(geometry, "RHO");
     names.forEach((name) => els.morphology.add(new Option(`${labelFor(name)}  ·  ${name}`, name)));
-    els.morphology.value = names.includes("droplet_w1c0") ? "droplet_w1c0" : names[0];
+    els.morphology.value = names[0];
     await calculate();
   } catch (error) {
     els.loading.textContent = "The analytical model could not be loaded. Check the internet connection and reload the page.";

@@ -1257,7 +1257,6 @@ def cond_filament_w1c0_square(l, phi, th, delta):
         r = sqrt(phi / denom)
         cond: 2 r < a'
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1317,7 +1316,6 @@ def cond_filament_w4c0_square(l, phi, th, delta):
         cond1: theta > 3 pi / 4
         cond2: L1 < 0.5 - delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1383,7 +1381,6 @@ def cond_filament_w4c1_square(l, phi, th, delta):
         cond1: theta > 3 pi / 4
         cond2: L1 < 0.5 - delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1452,7 +1449,6 @@ def cond_filament_w4c2_square(l, phi, th, delta):
         cond1: theta > 3 pi / 4
         cond2: L1 < 0.5 - delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
@@ -1516,7 +1512,6 @@ def cond_filament_w4c3_square(l, phi, th, delta):
         cond1: theta > 3 pi / 4
         cond2: L1 < 1 - 2 delta
     """
-    del l
     a_prime = a_prime_square(delta)
 
     phi_arr = np.asarray(phi, dtype=float)
