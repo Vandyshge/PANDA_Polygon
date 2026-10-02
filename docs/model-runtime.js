@@ -26,7 +26,7 @@ export async function getRuntime(geometry) {
 
   const pyodide = await runtimePromise;
   if (!loadedModels.has(geometry)) {
-    const source = await fetch(`./model/${geometry}.py`).then((response) => {
+    const source = await fetch(`./model/${geometry}.py`, { cache: "no-store" }).then((response) => {
       if (!response.ok) throw new Error(`Cannot load ${geometry}.py`);
       return response.text();
     });
