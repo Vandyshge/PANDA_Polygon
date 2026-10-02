@@ -13,6 +13,8 @@ The diagrams compare interfacial areas of all morphologies implemented in the mo
 
 ## Website
 
+The public site is available at **[vandyshge.github.io/PANDA_Polygon](https://vandyshge.github.io/PANDA_Polygon/)**.
+
 GitHub Pages serves the contents of [`docs/`](docs/). Open `docs/index.html` through a local HTTP server for development; opening it directly as a `file://` URL will not work because the model modules are fetched at runtime.
 
 ## Structure
