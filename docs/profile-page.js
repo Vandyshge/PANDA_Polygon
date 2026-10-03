@@ -147,15 +147,19 @@ function draw() {
   wallPositions.forEach((value) => { const x = xToPx(value); ctx.beginPath(); ctx.moveTo(x, plot.y); ctx.lineTo(x, plot.y + plot.h); ctx.stroke(); });
   ctx.restore();
 
+  const profileInsidePore = xs
+    .map((x, index) => [x, ys[index]])
+    .filter(([x, y]) => x >= wallPositions[0] && x <= wallPositions[1] && Number.isFinite(y));
+
+  // Outside the physical pore the density is zero. At each wall, draw both
+  // the calculated boundary value and the exterior zero value, producing an
+  // explicit vertical cut while preserving the value exactly on the wall.
   ctx.beginPath();
-  let drawing = false;
-  xs.forEach((x, index) => {
-    const insidePhysicalPore = x >= wallPositions[0] && x <= wallPositions[1];
-    if (!insidePhysicalPore || !Number.isFinite(ys[index])) { drawing = false; return; }
-    const px = xToPx(x), py = yToPx(ys[index]);
-    drawing ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
-    drawing = true;
-  });
+  ctx.moveTo(xToPx(xMin), yToPx(0));
+  ctx.lineTo(xToPx(wallPositions[0]), yToPx(0));
+  for (const [x, y] of profileInsidePore) ctx.lineTo(xToPx(x), yToPx(y));
+  ctx.lineTo(xToPx(wallPositions[1]), yToPx(0));
+  ctx.lineTo(xToPx(xMax), yToPx(0));
   ctx.strokeStyle = COLORS[geometry]; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke();
   ctx.strokeStyle = "#26332d"; ctx.lineWidth = 1; ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
   ctx.font = "italic 16px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#18272d"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
