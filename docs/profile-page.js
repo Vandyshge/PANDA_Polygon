@@ -1,4 +1,4 @@
-import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261005";
+import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261006";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, length: 1, ly: 1, phi: 0.25 };
@@ -124,8 +124,9 @@ function draw() {
     : [-Math.sqrt(3) / 6, Math.sqrt(3) / 3];
   const wallSpan = wallPositions[1] - wallPositions[0];
   const xMin = wallPositions[0] - 0.06 * wallSpan, xMax = wallPositions[1] + 0.06 * wallSpan;
-  const finite = ys.filter(Number.isFinite);
-  const yMax = Math.max(1, ...finite) * 1.08;
+  const finiteInsidePore = ys.filter((value, index) => Number.isFinite(value) && xs[index] >= wallPositions[0] && xs[index] <= wallPositions[1]);
+  const profileMax = Math.max(0, ...finiteInsidePore);
+  const yMax = profileMax <= 0.25 + 1e-9 ? 0.25 : profileMax <= 0.5 + 1e-9 ? 0.5 : 1.06;
   const xToPx = (x) => plot.x + (x - xMin) / (xMax - xMin) * plot.w;
   const yToPx = (y) => plot.y + plot.h - Math.max(0, y) / yMax * plot.h;
 

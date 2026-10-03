@@ -94,7 +94,10 @@ _cond_registry = _module.COND_${upper}
 _name = str(__morphology)
 _theta = np.deg2rad(float(__theta_deg))
 _z_min, _z_max = (-0.65, 0.65) if '${geometry}' == 'square' else (-0.58, 0.72)
-_z = np.linspace(_z_min, _z_max, int(__samples))
+_physical_walls = np.array([-0.5, 0.5]) if '${geometry}' == 'square' else np.array([-np.sqrt(3.0)/6.0, np.sqrt(3.0)/3.0])
+# Include the physical walls explicitly so values evaluated exactly at the
+# boundaries survive the inclusive clipping performed by the canvas renderer.
+_z = np.unique(np.concatenate([np.linspace(_z_min, _z_max, int(__samples)), _physical_walls]))
 _exists = bool(np.asarray(_cond_registry[_name](float(__length), float(__phi), _theta, float(__delta))).item())
 _rho = np.asarray(_rho_registry[_name](_z, float(__length), float(__ly), float(__phi), _theta, float(__delta)), dtype=float)
 _rho[~np.isfinite(_rho)] = 0.0
