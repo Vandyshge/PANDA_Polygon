@@ -1,4 +1,4 @@
-import { computePhase, listMorphologies } from "./model-runtime.js?v=20261004";
+import { computePhase, listMorphologies } from "./model-runtime.js?v=20261005";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, lMax: 5, resolution: 180 };
@@ -48,18 +48,25 @@ function renderToggles() {
     });
     return label;
   }));
-  renderLegend();
+  els.legend.replaceChildren();
 }
 
-function renderLegend() {
-  const names = state.morphologies.filter((name) => state.enabled.has(name));
+function renderLegend(names) {
   els.legend.replaceChildren(...names.map((name) => {
     const item = document.createElement("div");
     item.className = "legend-item";
     item.innerHTML = `<span style="background:${state.colors.get(name)}"></span>${labelFor(name)}`;
     return item;
   }));
-  els.candidateCount.textContent = `${names.length} analytical candidate${names.length === 1 ? "" : "s"}`;
+  els.candidateCount.textContent = `${names.length} ${names.length === 1 ? "morphology appears" : "morphologies appear"} on the map`;
+}
+
+function morphologiesWithMinimum(result) {
+  const visibleIndices = new Set();
+  for (const row of result.phase) {
+    for (const phaseIndex of row) if (phaseIndex >= 0) visibleIndices.add(phaseIndex);
+  }
+  return result.names.filter((_, index) => visibleIndices.has(index));
 }
 
 function readInputs() {
@@ -75,7 +82,6 @@ function readInputs() {
 
 async function calculate() {
   readInputs();
-  renderLegend();
   const id = ++state.requestId;
   els.loading.hidden = false;
   els.loading.textContent = "Calculating stability map…";
@@ -83,6 +89,7 @@ async function calculate() {
     const result = await computePhase({ geometry, thetaDeg: state.theta, delta: state.delta, lMax: state.lMax, resolution: state.resolution, enabled: [...state.enabled] });
     if (id !== state.requestId) return;
     state.result = result;
+    renderLegend(morphologiesWithMinimum(result));
     draw();
   } catch (error) {
     els.loading.textContent = "The analytical model could not be evaluated.";

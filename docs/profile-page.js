@@ -1,4 +1,4 @@
-import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261004";
+import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261005";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, length: 1, ly: 1, phi: 0.25 };
@@ -117,11 +117,13 @@ function draw() {
   ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, width, height);
   const xs = state.result.z;
   const ys = state.result.rho;
+  // Physical pore walls are fixed at delta = 0. The wetting-layer thickness
+  // changes the analytical profile, not the displayed pore geometry.
   const wallPositions = geometry === "square"
-    ? [-(1 - 2 * state.delta) / 2, (1 - 2 * state.delta) / 2]
-    : [-Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 6, Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 3];
+    ? [-0.5, 0.5]
+    : [-Math.sqrt(3) / 6, Math.sqrt(3) / 3];
   const wallSpan = wallPositions[1] - wallPositions[0];
-  const xMin = wallPositions[0] - 0.08 * wallSpan, xMax = wallPositions[1] + 0.08 * wallSpan;
+  const xMin = wallPositions[0] - 0.06 * wallSpan, xMax = wallPositions[1] + 0.06 * wallSpan;
   const finite = ys.filter(Number.isFinite);
   const yMax = Math.max(1, ...finite) * 1.08;
   const xToPx = (x) => plot.x + (x - xMin) / (xMax - xMin) * plot.w;
@@ -147,7 +149,8 @@ function draw() {
   ctx.beginPath();
   let drawing = false;
   xs.forEach((x, index) => {
-    if (x < wallPositions[0] || x > wallPositions[1] || !Number.isFinite(ys[index])) { drawing = false; return; }
+    const insidePhysicalPore = x >= wallPositions[0] && x <= wallPositions[1];
+    if (!insidePhysicalPore || !Number.isFinite(ys[index])) { drawing = false; return; }
     const px = xToPx(x), py = yToPx(ys[index]);
     drawing ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
     drawing = true;
@@ -156,7 +159,28 @@ function draw() {
   ctx.strokeStyle = "#26332d"; ctx.lineWidth = 1; ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
   ctx.font = "italic 16px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#18272d"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
   ctx.fillText("z/a", plot.x + plot.w / 2, height - 8);
-  ctx.save(); ctx.translate(20, plot.y + plot.h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("ρ/ρbulk", 0, 0); ctx.restore();
+  drawDensityAxisLabel(ctx, 20, plot.y + plot.h / 2);
+}
+
+function drawDensityAxisLabel(ctx, x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#18272d";
+  ctx.font = "italic 16px Arial, Helvetica, sans-serif";
+  const main = "ρ/ρ";
+  const mainWidth = ctx.measureText(main).width;
+  ctx.font = "italic 11px Arial, Helvetica, sans-serif";
+  const subWidth = ctx.measureText("bulk").width;
+  const start = -(mainWidth + subWidth) / 2;
+  ctx.font = "italic 16px Arial, Helvetica, sans-serif";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(main, start, 0);
+  ctx.font = "italic 11px Arial, Helvetica, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText("bulk", start + mainWidth, 1);
+  ctx.restore();
 }
 
 function reset() {
