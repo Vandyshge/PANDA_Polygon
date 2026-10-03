@@ -59,6 +59,39 @@ h1 { margin-bottom: 9px; font-family: Georgia, "Times New Roman", serif; font-si
 .range-control > span, .field-control > span { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: .87rem; }
 .range-control output { font-variant-numeric: tabular-nums; font-weight: 600; }
 input[type="range"] { width: 100%; margin: 12px 0 0; accent-color: var(--accent); }
+.existence-range {
+  --existence-track: #dce1e5;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  height: 7px;
+  border: 1px solid #b9c1c6;
+  border-radius: 999px;
+  background: var(--existence-track);
+  outline: none;
+}
+.existence-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 23px;
+  height: 23px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #b94848;
+  box-shadow: 0 0 0 2px #8c9290;
+  cursor: pointer;
+}
+.existence-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #b94848;
+  box-shadow: 0 0 0 2px #8c9290;
+  cursor: pointer;
+}
+.region-note { display: block; margin-top: 10px; color: #59655f; font-size: .78rem; line-height: 1.35; }
+.region-note.empty { color: #8a5a55; }
 .field-control { display: block; margin-top: 13px; }
 .field-control input, .field-control select {
   width: 100%; margin-top: 7px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 5px; background: #fff; outline: none;
@@ -100,6 +133,11 @@ input[type="range"] { width: 100%; margin: 12px 0 0; accent-color: var(--accent)
 .status-card { margin-top: 14px; border-left: 3px solid var(--accent); background: #f4f7f1; padding: 10px 12px; color: #50564f; font-size: .82rem; line-height: 1.45; }
 .status-card.invalid { border-color: var(--danger); background: #fbf3f1; color: #7e382f; }
 .parameter-line { color: #747a73; font: .72rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; margin: 9px 0 0; overflow-wrap: anywhere; }
+.profile-legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 13px; color: var(--muted); font-size: .78rem; }
+.profile-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.profile-legend i { display: inline-block; width: 26px; height: 0; border-top: 3px solid #4e8c78; }
+.profile-legend .profile-line.square { border-top-color: #557aa4; }
+.profile-legend .wall-line { border-top: 2px dashed #7d837c; }
 
 footer { height: 42px; padding: 0 28px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; color: #777d76; font-size: .72rem; background: #fff; }
 

@@ -1,4 +1,4 @@
-import { computePhase, listMorphologies } from "./model-runtime.js?v=20261003";
+import { computePhase, listMorphologies } from "./model-runtime.js?v=20261004";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, lMax: 5, resolution: 180 };
@@ -142,7 +142,7 @@ function draw() {
 
 function drawAxes(ctx) {
   ctx.fillStyle = "#18272d"; ctx.strokeStyle = "rgba(25,39,45,.2)"; ctx.lineWidth = 1;
-  ctx.font = "13px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.font = "14px Arial, Helvetica, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
   for (let i = 0; i <= 5; i++) {
     const value = i / 5, x = plot.x + value * plot.w;
     ctx.beginPath(); ctx.moveTo(x, plot.y); ctx.lineTo(x, plot.y + plot.h); ctx.stroke();
@@ -154,7 +154,7 @@ function drawAxes(ctx) {
     ctx.beginPath(); ctx.moveTo(plot.x, y); ctx.lineTo(plot.x + plot.w, y); ctx.stroke();
     ctx.fillText(Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1), plot.x - 10, y);
   }
-  ctx.font = "italic 17px Georgia, serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  ctx.font = "italic 16px Arial, Helvetica, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
   ctx.fillText("φ", plot.x + plot.w / 2, plot.y + plot.h + 49);
   ctx.save(); ctx.translate(18, plot.y + plot.h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("l", 0, 0); ctx.restore();
   ctx.strokeStyle = "#26332d"; ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);

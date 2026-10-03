@@ -1,4 +1,4 @@
-import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261003";
+import { computeProfile, listMorphologies } from "./model-runtime.js?v=20261004";
 
 const geometry = document.body.dataset.geometry;
 const DEFAULTS = { theta: 180, delta: 0.017, length: 1, ly: 1, phi: 0.25 };
@@ -34,6 +34,7 @@ function readInputs() {
   els.thetaOutput.value = `${state.theta.toFixed(0)}°`;
   els.deltaOutput.value = state.delta.toFixed(3);
   els.phiOutput.value = state.phi.toFixed(3);
+  els.lengthOutput.value = state.length.toFixed(2);
   els.profileTitle.textContent = labelFor(state.morphology);
   els.geometryLabel.textContent = geometry === "triangle" ? "triangular pore" : "square pore";
   els.parameterLine.textContent = `morphology=${state.morphology} · θ=${state.theta.toFixed(1)}° · δ=${state.delta.toFixed(3)} · l=${state.length.toFixed(3)} · lᵧ=${state.ly.toFixed(3)} · φ=${state.phi.toFixed(3)}`;
@@ -52,12 +53,45 @@ async function calculate() {
     els.existenceStatus.textContent = result.exists
       ? "The selected morphology exists for these parameters."
       : "This morphology does not satisfy its geometrical existence condition for these parameters.";
+    renderExistenceRanges(result);
     draw();
     els.loading.hidden = true;
   } catch (error) {
     els.loading.textContent = "The analytical profile could not be evaluated.";
     console.error(error);
   }
+}
+
+function renderExistenceRanges(result) {
+  const controls = {
+    theta: { input: els.theta, note: els.thetaRegion, digits: 0, suffix: "°" },
+    phi: { input: els.phi, note: els.phiRegion, digits: 3, suffix: "" },
+    delta: { input: els.delta, note: els.deltaRegion, digits: 3, suffix: "" },
+    length: { input: els.length, note: els.lengthRegion, digits: 2, suffix: "" },
+  };
+  for (const [axis, control] of Object.entries(controls)) {
+    const domain = result.domains[axis];
+    const ranges = result.ranges[axis] || [];
+    control.input.style.setProperty("--existence-track", gradientForRanges(ranges, domain));
+    control.note.textContent = ranges.length
+      ? `Existence region: ${ranges.map(([start, end]) => `${start.toFixed(control.digits)}–${end.toFixed(control.digits)}${control.suffix}`).join(", ")}`
+      : "No existence region for the current parameters.";
+    control.note.classList.toggle("empty", !ranges.length);
+  }
+}
+
+function gradientForRanges(ranges, [minimum, maximum]) {
+  const inactive = "#dce1e5";
+  const active = "#79a985";
+  if (!ranges.length) return inactive;
+  const stops = [`${inactive} 0%`];
+  for (const [start, end] of ranges) {
+    const from = Math.max(0, Math.min(100, (start - minimum) / (maximum - minimum) * 100));
+    const to = Math.max(0, Math.min(100, (end - minimum) / (maximum - minimum) * 100));
+    stops.push(`${inactive} ${from}%`, `${active} ${from}%`, `${active} ${to}%`, `${inactive} ${to}%`);
+  }
+  stops.push(`${inactive} 100%`);
+  return `linear-gradient(to right, ${stops.join(", ")})`;
 }
 
 function scheduleCompute() { clearTimeout(inputTimer); inputTimer = setTimeout(calculate, 140); }
@@ -83,14 +117,18 @@ function draw() {
   ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, width, height);
   const xs = state.result.z;
   const ys = state.result.rho;
-  const xMin = xs[0], xMax = xs.at(-1);
+  const wallPositions = geometry === "square"
+    ? [-(1 - 2 * state.delta) / 2, (1 - 2 * state.delta) / 2]
+    : [-Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 6, Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 3];
+  const wallSpan = wallPositions[1] - wallPositions[0];
+  const xMin = wallPositions[0] - 0.08 * wallSpan, xMax = wallPositions[1] + 0.08 * wallSpan;
   const finite = ys.filter(Number.isFinite);
   const yMax = Math.max(1, ...finite) * 1.08;
   const xToPx = (x) => plot.x + (x - xMin) / (xMax - xMin) * plot.w;
   const yToPx = (y) => plot.y + plot.h - Math.max(0, y) / yMax * plot.h;
 
   ctx.strokeStyle = "rgba(25,39,45,.14)"; ctx.lineWidth = 1;
-  ctx.font = "13px Arial, sans-serif"; ctx.fillStyle = "#18272d";
+  ctx.font = "14px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#18272d";
   for (let i = 0; i <= 5; i++) {
     const f = i / 5, x = plot.x + f * plot.w, value = xMin + f * (xMax - xMin);
     ctx.beginPath(); ctx.moveTo(x, plot.y); ctx.lineTo(x, plot.y + plot.h); ctx.stroke();
@@ -102,18 +140,21 @@ function draw() {
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText((f * yMax).toFixed(2), plot.x - 10, y);
   }
 
-  const wallPositions = geometry === "square"
-    ? [-(1 - 2 * state.delta) / 2, (1 - 2 * state.delta) / 2]
-    : [-Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 6, Math.sqrt(3) * (1 - 2 * Math.sqrt(3) * state.delta) / 3];
   ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#7d837c";
   wallPositions.forEach((value) => { const x = xToPx(value); ctx.beginPath(); ctx.moveTo(x, plot.y); ctx.lineTo(x, plot.y + plot.h); ctx.stroke(); });
   ctx.restore();
 
   ctx.beginPath();
-  xs.forEach((x, index) => { const px = xToPx(x), py = yToPx(ys[index]); index ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  let drawing = false;
+  xs.forEach((x, index) => {
+    if (x < wallPositions[0] || x > wallPositions[1] || !Number.isFinite(ys[index])) { drawing = false; return; }
+    const px = xToPx(x), py = yToPx(ys[index]);
+    drawing ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    drawing = true;
+  });
   ctx.strokeStyle = COLORS[geometry]; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke();
   ctx.strokeStyle = "#26332d"; ctx.lineWidth = 1; ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
-  ctx.font = "italic 17px Georgia, serif"; ctx.fillStyle = "#18272d"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  ctx.font = "italic 16px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#18272d"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
   ctx.fillText("z/a", plot.x + plot.w / 2, height - 8);
   ctx.save(); ctx.translate(20, plot.y + plot.h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("ρ/ρbulk", 0, 0); ctx.restore();
 }
@@ -143,8 +184,8 @@ async function init() {
   }
 }
 
-[els.theta, els.delta, els.phi].forEach((input) => input.addEventListener("input", scheduleCompute));
-[els.morphology, els.length, els.ly].forEach((input) => input.addEventListener("change", scheduleCompute));
+[els.theta, els.delta, els.phi, els.length].forEach((input) => input.addEventListener("input", scheduleCompute));
+[els.morphology, els.ly].forEach((input) => input.addEventListener("change", scheduleCompute));
 els.reset.addEventListener("click", reset);
 els.export.addEventListener("click", exportPng);
 new ResizeObserver(() => { cancelAnimationFrame(resizeFrame); resizeFrame = requestAnimationFrame(draw); }).observe(els.plotWrap);

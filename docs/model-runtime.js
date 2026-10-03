@@ -98,7 +98,50 @@ _z = np.linspace(_z_min, _z_max, int(__samples))
 _exists = bool(np.asarray(_cond_registry[_name](float(__length), float(__phi), _theta, float(__delta))).item())
 _rho = np.asarray(_rho_registry[_name](_z, float(__length), float(__ly), float(__phi), _theta, float(__delta)), dtype=float)
 _rho[~np.isfinite(_rho)] = 0.0
-json.dumps({'z': _z.tolist(), 'rho': _rho.tolist(), 'exists': _exists})
+
+def _condition(length, fraction, theta_deg, layer):
+    try:
+        value = _cond_registry[_name](float(length), float(fraction), np.deg2rad(float(theta_deg)), float(layer))
+        return bool(np.asarray(value).item())
+    except (ValueError, TypeError, FloatingPointError, ZeroDivisionError):
+        return False
+
+def _ranges(axis, lower, upper, count=241):
+    values = np.linspace(lower, upper, count)
+    mask = []
+    for value in values:
+        args = {
+            'length': float(__length), 'fraction': float(__phi),
+            'theta_deg': float(__theta_deg), 'layer': float(__delta),
+        }
+        args[axis] = float(value)
+        mask.append(_condition(**args))
+    intervals = []
+    start = None
+    for index, valid in enumerate(mask):
+        if valid and start is None:
+            start = values[index]
+        if start is not None and (not valid or index == len(mask) - 1):
+            end_index = index if valid and index == len(mask) - 1 else index - 1
+            intervals.append([float(start), float(values[end_index])])
+            start = None
+    return intervals
+
+_delta_max = 0.20 if '${geometry}' == 'square' else 0.14
+_domains = {
+    'theta': [1.0, 180.0], 'phi': [0.001, 0.999],
+    'delta': [0.0, _delta_max], 'length': [0.05, 10.0],
+}
+_existence_ranges = {
+    'theta': _ranges('theta_deg', *_domains['theta']),
+    'phi': _ranges('fraction', *_domains['phi']),
+    'delta': _ranges('layer', *_domains['delta']),
+    'length': _ranges('length', *_domains['length']),
+}
+json.dumps({
+    'z': _z.tolist(), 'rho': _rho.tolist(), 'exists': _exists,
+    'ranges': _existence_ranges, 'domains': _domains,
+})
   `);
   return JSON.parse(json);
 }
